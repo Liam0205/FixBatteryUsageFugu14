@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# the directory of the script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# the temp directory used, within $DIR
+# omit the -p parameter to create a temporal directory in the default location
+WORK_DIR=`mktemp -d -p "$DIR"`
+
+# check if tmp dir was created
+if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
+  echo "Could not create temp dir"
+  exit 1
+fi
+
+# deletes the temp directory
+function cleanup {
+  rm -rf "$WORK_DIR"
+  echo "Deleted temp working directory $WORK_DIR"
+}
+
+# register the cleanup function to be called on the EXIT signal
+trap cleanup EXIT
+
+########
+
+# backup
+if [[ ! -f /etc/passwd.backup.page.liam ]]; then
+  cp /etc/passwd /etc/passwd.backup.page.liam
+fi
+if [[ ! -f /etc/master.passwd.backup.page.liam ]]; then
+  cp /etc/master.passwd /etc/master.passwd.backup.page.liam
+fi
+
+# modification
+cd $WORK_DIR
+cp /etc/passwd ./
+cp /etc/master.passwd ./
+
+sed -i '/_nanalyticsd/c\PAGE_LIAM_PLACEHOLDER' ./passwd
+sed -i '/_analyticsd/c\_nanalyticsd:*:263:263:Analytics Daemon:/var/db/analyticsd:/usr/bin/false' ./passwd
+sed -i '/PAGE_LIAM_PLACEHOLDER/c\_analyticsd:*:263:263:Haxx Daemon:/private/var/mobile/Containers/Data/Fugu14Untether:/usr/bin/false' ./passwd
+
+mv ./passwd /etc/passwd
+
+sed -i '/_nanalyticsd/c\PAGE_LIAM_PLACEHOLDER' ./master.passwd
+sed -i '/_analyticsd/c\_nanalyticsd:*:263:263::0:0:Analytics Daemon:/var/db/analyticsd:/usr/bin/false' ./master.passwd
+sed -i '/PAGE_LIAM_PLACEHOLDER/c\_analyticsd:*:263:263::0:0:Haxx Daemon:/private/var/mobile/Containers/Data/Fugu14Untether:/usr/bin/false' ./master.passwd
+
+mv ./master.passwd /etc/master.passwd
+
+# do the dirty work
+cd /var/mobile/Containers/Data/Fugu14Untether/Library/Caches/com.apple.dyld
+chflags -v noschg,nouchg *.closure >/dev/null >2&
+sudo chown 263:263 *.closure
+sudo chflags -v schg,uchg *.closure >/dev/null >2&
+chown -h 263:263 /var/mobile/Containers/Data/Fugu14Untether/Library
+chown -R 263:263 /var/db/analyticsd/
+launchctl stop com.apple.analyticsd
+
+# show
+>2& echo "Work Completed!"
+>2& echo "You can now *REMOVE* this package!"
