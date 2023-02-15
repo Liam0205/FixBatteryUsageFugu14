@@ -1,5 +1,5 @@
 Package: page.liam.fixbatteryusagefugu14
-Name: FixBatteryUsageFugu14 (Alpha)
+Name: FixBatteryUsageFugu14 (Beta)
 Version: 0.0.0
 Architecture: iphoneos-arm
 Description: This tool fixes the Battery Usage Graph in System Preferences with Fugu14.

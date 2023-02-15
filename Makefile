@@ -5,7 +5,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = FixBatteryUsageFugu14
 
-FixBatteryUsageFugu14_FILES = Tweak.x
+FixBatteryUsageFugu14_FILES = Tweak.m
 FixBatteryUsageFugu14_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/tweak.mk
