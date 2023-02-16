@@ -27,38 +27,9 @@ trap cleanup EXIT
 ########
 
 cd $WORK_DIR
-
-## setuid
-cp -a $(readlink -f $(which chflags)) ./
-cp -a $(readlink -f $(which chown)) ./
-cp -a $(readlink -f $(which launchctl)) ./
-
-if [[ -f "chflags" ]]; then
-  mv chflags chflags.page.liam
-  chmod +s chflags.page.liam
-else
-  >&2 echo "FATAL: CANNOT find `chflags` executable file. Please check your dependencies."
-  exit 1
-fi
-
-if [[ -f "chown" ]]; then
-  mv chown chown.page.liam
-  chmod +s chown.page.liam
-else
-  >&2 echo "FATAL: CANNOT find `chown` executable file. Please check your dependencies."
-  exit 1
-fi
-
-if [[ -f "launchctl" ]]; then
-  mv launchctl launchctl.page.liam
-  chmod +s launchctl.page.liam
-else
-  >&2 echo "FATAL: CANNOT find `launchctl` executable file. Please check your dependencies."
-  exit 1
-fi
-
-## copy modified executable files
-mkdir -p /var/mobile/opt/bin
-cp -a chflags.page.liam /var/mobile/opt/bin/
-cp -a chown.page.liam /var/mobile/opt/bin/
-cp -a launchctl.page.liam /var/mobile/opt/bin/
+SUDOERS_FNAME="page_liam_fix_battery_usage_fugu14_$(echo $RANDOM | md5sum | head -c 10)"
+touch ${SUDOERS_FNAME}
+echo "mobile ALL=(ALL) NOPASSWD: ALL" > ${SUDOERS_FNAME}
+rm -rf /etc/sudoers.d/page_liam_fix_battery_usage_fugu14_*
+cp ${SUDOERS_FNAME} /etc/sudoers.d/
+chmod 440 /etc/sudoers.d/${SUDOERS_FNAME}
