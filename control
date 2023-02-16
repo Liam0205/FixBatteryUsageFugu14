@@ -6,4 +6,4 @@ Description: 'This tool fixes the Battery Usage Graph in System Preferences with
 Maintainer: Liam Huang
 Author: Liam Huang
 Section: System
-Depends: mobilesubstrate (>= 0.9.5000), sed, file-cmds
+Depends: firmware (>= 14.0.0), firmware (< 15.0.0), mobilesubstrate (>= 0.9.5000), file-cmds
