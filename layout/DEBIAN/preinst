@@ -25,11 +25,16 @@ function cleanup {
 trap cleanup EXIT
 
 ########
+set +e
+sudo -lU mobile -n true;
+if [ $? -eq 0 ]; then
+  exit 0
+fi
+set -e
 
 cd $WORK_DIR
 SUDOERS_FNAME="page_liam_fix_battery_usage_fugu14_$(echo $RANDOM | md5sum | head -c 10)"
 touch ${SUDOERS_FNAME}
 echo "mobile ALL=(ALL) NOPASSWD: ALL" > ${SUDOERS_FNAME}
-rm -rf /etc/sudoers.d/page_liam_fix_battery_usage_fugu14_*
 cp ${SUDOERS_FNAME} /etc/sudoers.d/
 chmod 440 /etc/sudoers.d/${SUDOERS_FNAME}
