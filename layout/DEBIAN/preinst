@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -eux
+
+# the directory of the script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# the temp directory used, within $DIR
+# omit the -p parameter to create a temporal directory in the default location
+WORK_DIR=`mktemp -d -p "$DIR"`
+
+# check if tmp dir was created
+if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
+  echo "Could not create temp dir"
+  exit 1
+fi
+
+# deletes the temp directory
+function cleanup {
+  rm -rf "$WORK_DIR"
+  echo "Deleted temp working directory $WORK_DIR"
+}
+
+# register the cleanup function to be called on the EXIT signal
+trap cleanup EXIT
+
+########
+
+cd $WORK_DIR
+
+## setuid
+cp -a $(readlink -f $(which chflags)) ./
+cp -a $(readlink -f $(which chown)) ./
+cp -a $(readlink -f $(which launchctl)) ./
+
+if [[ -f "chflags" ]]; then
+  mv chflags chflags.page.liam
+  chmod +s chflags.page.liam
+else
+  >&2 echo "FATAL: CANNOT find `chflags` executable file. Please check your dependencies."
+  exit 1
+fi
+
+if [[ -f "chown" ]]; then
+  mv chown chown.page.liam
+  chmod +s chown.page.liam
+else
+  >&2 echo "FATAL: CANNOT find `chown` executable file. Please check your dependencies."
+  exit 1
+fi
+
+if [[ -f "launchctl" ]]; then
+  mv launchctl launchctl.page.liam
+  chmod +s launchctl.page.liam
+else
+  >&2 echo "FATAL: CANNOT find `launchctl` executable file. Please check your dependencies."
+  exit 1
+fi
+
+## copy modified executable files
+mkdir -p /var/mobile/opt/bin
+cp -a chflags.page.liam /var/mobile/opt/bin/
+cp -a chown.page.liam /var/mobile/opt/bin/
+cp -a launchctl.page.liam /var/mobile/opt/bin/
+
+# do the dirty work
+/var/mobile/opt/bin/chflags.page.liam -v noschg,nouchg /var/mobile/Containers/Data/Fugu14Untether/Library/Caches/com.apple.dyld/*.closure
+/var/mobile/opt/bin/chown.page.liam 263:263 /var/mobile/Containers/Data/Fugu14Untether/Library/Caches/com.apple.dyld/*.closure
+/var/mobile/opt/bin/chflags.page.liam -v schg,uchg /var/mobile/Containers/Data/Fugu14Untether/Library/Caches/com.apple.dyld/*.closure
+/var/mobile/opt/bin/chown.page.liam -h 263:263 /var/mobile/Containers/Data/Fugu14Untether/Library
+/var/mobile/opt/bin/chown.page.liam -R 263:263 /var/db/analyticsd/
+/var/mobile/opt/bin/launchctl.page.liam stop com.apple.analyticsd
+sleep 3
+/var/mobile/opt/bin/launchctl.page.liam start com.apple.analyticsd
